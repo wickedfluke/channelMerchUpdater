@@ -14,6 +14,8 @@ channels = []  # Lista di canali dove inviare messaggi
 products = {}  # Dizionario di prodotti con stati
 scheduled_times = []  # Lista degli orari fissi
 
+user_states = {}  # Dizionario per memorizzare lo stato dell'utente
+
 class ProductStatus:
     DISPONIBILE = "Disponibile"
     IN_ESURIMENTO = "In esaurimento"
@@ -52,42 +54,25 @@ async def callback_handler(event):
     data = event.data.decode('utf-8')
     
     if data == "add_admin":
+        user_states[event.sender_id] = 'waiting_for_username'
         await event.respond("Invia il nome utente (es. @username) da aggiungere come admin.")
-        response = await client.get_response(event.chat_id, timeout=30)
-        new_admin_username = response.message
-        admins.add(new_admin_username)
-        await event.respond(f"Admin {new_admin_username} aggiunto con successo.")
-
-    elif data == "select_channels":
-        async for dialog in client.iter_dialogs():
-            if isinstance(dialog.entity, PeerChannel):
-                channels.append(dialog.entity.id)
-                await event.respond(f"Canale aggiunto: {dialog.title}")
     
+    elif data == "select_channels":
+        if event.sender_id in user_states and user_states[event.sender_id] == 'waiting_for_username':
+            user_states.pop(event.sender_id)
+            async for dialog in client.iter_dialogs():
+                if isinstance(dialog.entity, PeerChannel):
+                    channels.append(dialog.entity.id)
+                    await event.respond(f"Canale aggiunto: {dialog.title}")
+
     elif data == "add_product":
+        user_states[event.sender_id] = 'waiting_for_product_name'
         await event.respond("Invia il nome del prodotto da aggiungere.")
-        response = await client.get_response(event.chat_id, timeout=30)
-        product_name = response.message
-        products[product_name] = ProductStatus.DISPONIBILE
-        await event.respond(f"Prodotto {product_name} aggiunto con successo.")
     
     elif data == "change_status":
+        user_states[event.sender_id] = 'waiting_for_product_name'
         await event.respond("Seleziona il prodotto:")
-        response = await client.get_response(event.chat_id, timeout=30)
-        product_name = response.message
 
-        if product_name in products:
-            await event.respond(
-                "Seleziona lo stato:",
-                buttons=[
-                    Button.inline(ProductStatus.DISPONIBILE, f"status:{product_name}:{ProductStatus.DISPONIBILE}".encode('utf-8')),
-                    Button.inline(ProductStatus.IN_ESURIMENTO, f"status:{product_name}:{ProductStatus.IN_ESURIMENTO}".encode('utf-8')),
-                    Button.inline(ProductStatus.ESAURITO, f"status:{product_name}:{ProductStatus.ESAURITO}".encode('utf-8'))
-                ]
-            )
-        else:
-            await event.respond("Prodotto non trovato.")
-    
     elif data.startswith("status:"):
         _, product_name, status = data.split(":")
         products[product_name] = status
@@ -96,11 +81,48 @@ async def callback_handler(event):
             await client.send_message(channel, f"Il prodotto {product_name} è ora {status}.")
     
     elif data == "set_times":
+        user_states[event.sender_id] = 'waiting_for_times'
         await event.respond("Invia due orari nel formato HH:MM (es. 10:00 18:00).")
-        response = await client.get_response(event.chat_id, timeout=30)
-        times = response.message.split()
-        scheduled_times.extend(times)
-        await event.respond(f"Orari impostati: {', '.join(scheduled_times)}.")
+
+@client.on(events.NewMessage)
+async def message_handler(event):
+    if event.sender_id in user_states:
+        state = user_states[event.sender_id]
+        
+        if state == 'waiting_for_username':
+            username = event.message.message.strip()
+            try:
+                user = await client.get_entity(username)
+                admins.add(user.id)
+                await event.respond(f"Admin {username} aggiunto con successo.")
+            except Exception as e:
+                await event.respond(f"Errore: {e}")
+            finally:
+                user_states.pop(event.sender_id)
+
+        elif state == 'waiting_for_product_name':
+            product_name = event.message.strip()
+            if product_name in products:
+                await event.respond("Seleziona lo stato:",
+                    buttons=[
+                        Button.inline(ProductStatus.DISPONIBILE, f"status:{product_name}:{ProductStatus.DISPONIBILE}".encode('utf-8')),
+                        Button.inline(ProductStatus.IN_ESURIMENTO, f"status:{product_name}:{ProductStatus.IN_ESURIMENTO}".encode('utf-8')),
+                        Button.inline(ProductStatus.ESAURITO, f"status:{product_name}:{ProductStatus.ESAURITO}".encode('utf-8'))
+                    ]
+                )
+            else:
+                products[product_name] = ProductStatus.DISPONIBILE
+                await event.respond(f"Prodotto {product_name} aggiunto con successo.")
+            user_states.pop(event.sender_id)
+        
+        elif state == 'waiting_for_times':
+            times = event.message.strip().split()
+            if len(times) == 2:
+                scheduled_times.extend(times)
+                await event.respond(f"Orari impostati: {', '.join(scheduled_times)}.")
+            else:
+                await event.respond("Formato orario non valido. Invia due orari nel formato HH:MM.")
+            user_states.pop(event.sender_id)
 
 async def scheduled_message():
     while True:
@@ -116,7 +138,7 @@ async def scheduled_message():
 async def main():
     await set_first_admin()
     await client.start()
-    await scheduled_message()
+    asyncio.create_task(scheduled_message())  # Avvia il task per i messaggi programmati
 
 if __name__ == "__main__":
     client.loop.run_until_complete(main())
