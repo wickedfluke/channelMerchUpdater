@@ -39,7 +39,8 @@ async def start(event):
             buttons=[
                 [Button.inline("Aggiungi Admin", b"add_admin"), Button.inline("Seleziona Canali", b"select_channels")],
                 [Button.inline("Aggiungi Prodotto", b"add_product"), Button.inline("Cambia Stato Prodotto", b"change_status")],
-                [Button.inline("Imposta Orari", b"set_times"), Button.inline("Mostra Admin", b"show_admins")]
+                [Button.inline("Imposta Orari", b"set_times"), Button.inline("Mostra Admin", b"show_admins")],
+                [Button.inline("Mostra Prodotti", b"show_products")]
             ]
         )
     else:
@@ -97,6 +98,19 @@ async def callback_handler(event):
         for channel in channels:
             await client.send_message(channel, f"Il prodotto {product_name} è ora {status}.")
     
+    elif data == "show_products":
+        if products:
+            product_list = "\n".join([f"{product}: {status}" for product, status in products.items()])
+            await event.respond(
+                f"Lista dei prodotti:\n{product_list}",
+                buttons=[Button.inline("Home", b"home")]
+            )
+        else:
+            await event.respond(
+                "Non ci sono prodotti al momento.",
+                buttons=[Button.inline("Home", b"home")]
+            )
+
     elif data == "set_times":
         user_states[event.sender_id] = 'waiting_for_times'
         await event.respond("Invia due orari nel formato HH:MM (es. 10:00 18:00).")
@@ -130,8 +144,7 @@ async def message_handler(event):
                     buttons=[
                         Button.inline(ProductStatus.DISPONIBILE, f"status:{product_name}:{ProductStatus.DISPONIBILE}".encode('utf-8')),
                         Button.inline(ProductStatus.IN_ESURIMENTO, f"status:{product_name}:{ProductStatus.IN_ESURIMENTO}".encode('utf-8')),
-                        Button.inline(ProductStatus.ESAURITO, f"status:{product_name}:{ProductStatus.ESAURITO}".encode('utf-8')),
-                        Button.inline("Home", b"home")
+                        Button.inline(ProductStatus.ESAURITO, f"status:{product_name}:{ProductStatus.ESAURITO}".encode('utf-8'))
                     ]
                 )
             else:
