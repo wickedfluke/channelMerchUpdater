@@ -9,12 +9,12 @@ bot_token = '7209764652:AAFd3RiIXul3AAQCvwsYKIMX69ctrbrXGZA'
 
 client = TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)
 
-admins = set()  # Insieme per mantenere la lista degli admin
-channels = []  # Lista di canali dove inviare messaggi
-products = {}  # Dizionario di prodotti con stati
-scheduled_times = []  # Lista degli orari fissi
-
-user_states = {}  # Dizionario per memorizzare lo stato dell'utente
+admins = set()  
+channels = []  
+products = {}  
+scheduled_times = []  
+first_admin_id = None
+user_states = {}  
 
 class ProductStatus:
     DISPONIBILE = "Disponibile"
@@ -22,6 +22,7 @@ class ProductStatus:
     ESAURITO = "Esaurito"
 
 async def set_first_admin():
+    global first_admin_id
     while True:
         try:
             first_admin_id = int(input("Inserisci l'ID Telegram del primo admin: "))
@@ -34,14 +35,23 @@ async def set_first_admin():
 @client.on(events.NewMessage(pattern='/start'))
 async def start(event):
     if event.sender_id in admins:
+        if event.sender_id == first_admin_id:
+            buttons = [
+                [Button.inline("Aggiungi Admin", b"add_admin"), Button.inline("Mostra Admin", b"show_admins")],
+                [Button.inline("Aggiungi Prodotto", b"add_product"), Button.inline("Cambia Stato Prodotto", b"change_status")],
+                [Button.inline("Mostra Canali", b"show_channels"), Button.inline("Seleziona Canali", b"select_channels")],
+                [Button.inline("Mostra Prodotti", b"show_products"), Button.inline("Imposta Orari", b"set_times")] 
+            ]
+        else:
+            buttons = [
+                [Button.inline("Aggiungi Prodotto", b"add_product"), Button.inline("Cambia Stato Prodotto", b"change_status")],
+                [Button.inline("Mostra Canali", b"show_channels"), Button.inline("Seleziona Canali", b"select_channels")],
+                [Button.inline("Mostra Prodotti", b"show_products"), Button.inline("Imposta Orari", b"set_times")] 
+            ]
+        
         await event.respond(
             "Benvenuto! Seleziona un'opzione:",
-            buttons=[
-                [Button.inline("Aggiungi Admin", b"add_admin"), Button.inline("Seleziona Canali", b"select_channels")],
-                [Button.inline("Aggiungi Prodotto", b"add_product"), Button.inline("Cambia Stato Prodotto", b"change_status")],
-                [Button.inline("Imposta Orari", b"set_times"), Button.inline("Mostra Admin", b"show_admins")],
-                [Button.inline("Mostra Prodotti", b"show_products")], [Button.inline("Mostra Canali", b"show_channels")]
-            ]
+            buttons=buttons
         )
     else:
         await event.respond("Benvenuto! Contatta l'amministratore per essere aggiunto.")
@@ -67,7 +77,7 @@ async def callback_handler(event):
         await event.respond("Invia il nome del prodotto da aggiungere.")
     
     elif data == "change_status":
-        if products:  # Se ci sono prodotti esistenti
+        if products:  
             buttons = [
                 [Button.inline(product_name, f"select_product:{product_name}".encode('utf-8'))] 
                 for product_name in products.keys()
@@ -121,7 +131,10 @@ async def callback_handler(event):
             product_list = "\n".join([f"{product}: {status}" for product, status in products.items()])
             await event.respond(
                 f"Lista dei prodotti:\n{product_list}",
-                buttons=[Button.inline("Home", b"home")]
+                buttons=[
+                    Button.inline("Home", b"home"),
+                    Button.inline("Elimina Prodotto", b"remove_product")
+                ]
             )
         else:
             await event.respond(
@@ -134,13 +147,24 @@ async def callback_handler(event):
             channel_list = "\n".join([f"Canale ID: {channel_id}" for channel_id in channels])
             await event.respond(
                 f"Lista dei canali:\n{channel_list}",
-                buttons=[Button.inline("Home", b"home")]
+                buttons=[
+                Button.inline("Home", b"home"),
+                Button.inline("Rimuovi Canale", b"remove_channel")  
+            ]
             )
         else:
             await event.respond(
                 "Non ci sono canali selezionati.",
                 buttons=[Button.inline("Home", b"home")]
             )
+
+    elif data == "remove_product":
+        user_states[event.sender_id] = 'waiting_for_product_removal'
+        await event.respond("Invia il nome del prodotto da eliminare.")
+
+    elif data == "remove_channel":
+        user_states[event.sender_id] = 'waiting_for_channel_removal'
+        await event.respond("Invia l'ID del canale che desideri rimuovere.")
 
     elif data == "set_times":
         user_states[event.sender_id] = 'waiting_for_times'
@@ -171,9 +195,7 @@ async def message_handler(event):
         elif state == 'waiting_for_channel_link':
             channel_link = event.message.message.strip()
             try:
-                # Prova ad ottenere il canale usando il link o username
                 channel = await client.get_entity(channel_link)
-                # if isinstance(channel, PeerChannel):
                 if 1==1:
                     channels.append(channel.id)
                     await event.respond(
@@ -186,6 +208,44 @@ async def message_handler(event):
                 await event.respond(f"Errore: {e}", buttons=[Button.inline("Home", b"home")])
             finally:
                 user_states.pop(event.sender_id)
+
+        elif state == 'waiting_for_channel_removal':
+            try:
+                channel_id = int(event.message.message.strip())
+                if channel_id in channels:
+                    channels.remove(channel_id)  
+                    await event.respond(
+                        f"Canale con ID {channel_id} rimosso con successo.",
+                        buttons=[Button.inline("Home", b"home")]
+                    )
+                else:
+                    await event.respond(
+                        f"Il canale con ID {channel_id} non è nella lista.",
+                        buttons=[Button.inline("Home", b"home")]
+                    )
+            except ValueError:
+                await event.respond(
+                    "ID del canale non valido. Assicurati di inviare un numero intero.",
+                    buttons=[Button.inline("Home", b"home")]
+                )
+            user_states.pop(event.sender_id)  
+
+
+        elif state == 'waiting_for_product_removal':
+            product_name = event.message.message.strip()
+            if product_name in products:
+                del products[product_name]  
+                await event.respond(
+                    f"Prodotto {product_name} eliminato con successo.",
+                    buttons=[Button.inline("Home", b"home")]
+                )
+            else:
+                await event.respond(
+                    f"Il prodotto {product_name} non esiste.",
+                    buttons=[Button.inline("Home", b"home")]
+        )
+            user_states.pop(event.sender_id)
+
 
         elif state == 'waiting_for_product_name':
             product_name = event.message.message.strip()
@@ -248,7 +308,7 @@ async def scheduled_message():
 async def main():
     await set_first_admin()
     await client.start()
-    asyncio.create_task(scheduled_message())  # Avvia il task per i messaggi programmati
+    asyncio.create_task(scheduled_message())  
 
 if __name__ == "__main__":
     client.loop.run_until_complete(main())
