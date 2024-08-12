@@ -17,9 +17,9 @@ first_admin_id = None
 user_states = {}  
 
 class ProductStatus:
-    DISPONIBILE = "Disponibile"
-    IN_ESURIMENTO = "In esaurimento"
-    ESAURITO = "Esaurito"
+    DISPONIBILE = "DISPONIBILE🟢"
+    IN_ESURIMENTO = "IN ESAURIMENTO🟠"
+    ESAURITO = "ESAURITO🔴"
 
 async def set_first_admin():
     global first_admin_id
@@ -123,7 +123,7 @@ async def callback_handler(event):
             buttons=[Button.inline("Home", b"home")]
         )
         for channel in channels:
-            await client.send_message(channel, f"Il prodotto {product_name} è ora {status}.")
+            await client.send_message(channel, f"Il prodotto {product_name} è ora {status}")
     
     elif data == "show_products":
         if products:
