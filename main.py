@@ -40,7 +40,7 @@ async def start(event):
                 [Button.inline("Aggiungi Admin", b"add_admin"), Button.inline("Seleziona Canali", b"select_channels")],
                 [Button.inline("Aggiungi Prodotto", b"add_product"), Button.inline("Cambia Stato Prodotto", b"change_status")],
                 [Button.inline("Imposta Orari", b"set_times"), Button.inline("Mostra Admin", b"show_admins")],
-                [Button.inline("Mostra Prodotti", b"show_products")]
+                [Button.inline("Mostra Prodotti", b"show_products")], [Button.inline("Mostra Canali", b"show_channels")]
             ]
         )
     else:
@@ -59,12 +59,8 @@ async def callback_handler(event):
         await event.respond("Invia il nome utente (es. @username) da aggiungere come admin.")
     
     elif data == "select_channels":
-        if event.sender_id in user_states and user_states[event.sender_id] == 'waiting_for_username':
-            user_states.pop(event.sender_id)
-            async for dialog in client.iter_dialogs():
-                if isinstance(dialog.entity, PeerChannel):
-                    channels.append(dialog.entity.id)
-                    await event.respond(f"Canale aggiunto: {dialog.title}")
+        user_states[event.sender_id] = 'waiting_for_channel_link'
+        await event.respond("Invia l'username (es. @username) o il link del canale da aggiungere.")
 
     elif data == "add_product":
         user_states[event.sender_id] = 'waiting_for_product_name'
@@ -133,6 +129,19 @@ async def callback_handler(event):
                 buttons=[Button.inline("Home", b"home")]
             )
 
+    elif data == "show_channels":
+        if channels:
+            channel_list = "\n".join([f"Canale ID: {channel_id}" for channel_id in channels])
+            await event.respond(
+                f"Lista dei canali:\n{channel_list}",
+                buttons=[Button.inline("Home", b"home")]
+            )
+        else:
+            await event.respond(
+                "Non ci sono canali selezionati.",
+                buttons=[Button.inline("Home", b"home")]
+            )
+
     elif data == "set_times":
         user_states[event.sender_id] = 'waiting_for_times'
         await event.respond("Invia due orari nel formato HH:MM (es. 10:00 18:00).")
@@ -156,6 +165,25 @@ async def message_handler(event):
                 )
             except Exception as e:
                 await event.respond(f"Errore: {e}")
+            finally:
+                user_states.pop(event.sender_id)
+
+        elif state == 'waiting_for_channel_link':
+            channel_link = event.message.message.strip()
+            try:
+                # Prova ad ottenere il canale usando il link o username
+                channel = await client.get_entity(channel_link)
+                # if isinstance(channel, PeerChannel):
+                if 1==1:
+                    channels.append(channel.id)
+                    await event.respond(
+                        f"Canale aggiunto: {channel.title}",
+                        buttons=[Button.inline("Home", b"home")]
+                    )
+                else:
+                    await event.respond("Non è un canale valido.", buttons=[Button.inline("Home", b"home")])
+            except Exception as e:
+                await event.respond(f"Errore: {e}", buttons=[Button.inline("Home", b"home")])
             finally:
                 user_states.pop(event.sender_id)
 
