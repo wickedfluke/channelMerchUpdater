@@ -71,8 +71,30 @@ async def callback_handler(event):
         await event.respond("Invia il nome del prodotto da aggiungere.")
     
     elif data == "change_status":
-        user_states[event.sender_id] = 'waiting_for_product_name'
-        await event.respond("Seleziona il prodotto:")
+        if products:  # Se ci sono prodotti esistenti
+            buttons = [
+                [Button.inline(product_name, f"select_product:{product_name}".encode('utf-8'))] 
+                for product_name in products.keys()
+            ]
+            buttons.append([Button.inline("Home", b"home")])
+            await event.respond("Seleziona il prodotto:", buttons=buttons)
+            user_states[event.sender_id] = 'waiting_for_product_choice'
+        else:
+            await event.respond(
+                "Non ci sono prodotti disponibili.",
+                buttons=[Button.inline("Home", b"home")]
+            )
+
+    elif data.startswith("select_product:"):
+        product_name = data.split(":")[1]
+        await event.respond("Seleziona lo stato:",
+            buttons=[
+                Button.inline(ProductStatus.DISPONIBILE, f"status:{product_name}:{ProductStatus.DISPONIBILE}".encode('utf-8')),
+                Button.inline(ProductStatus.IN_ESURIMENTO, f"status:{product_name}:{ProductStatus.IN_ESURIMENTO}".encode('utf-8')),
+                Button.inline(ProductStatus.ESAURITO, f"status:{product_name}:{ProductStatus.ESAURITO}".encode('utf-8'))
+            ]
+        )
+        user_states.pop(event.sender_id)
     
     elif data == "show_admins":
         if admins:
@@ -154,7 +176,7 @@ async def message_handler(event):
                     buttons=[Button.inline("Home", b"home")]
                 )
             user_states.pop(event.sender_id)
-        
+
         elif state == 'waiting_for_times':
             times = event.message.message.strip().split()
             if len(times) == 2:
