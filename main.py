@@ -107,9 +107,8 @@ async def callback_handler(event):
             admin_list = "\n".join([f"@{(await client.get_entity(admin_id)).username}" for admin_id in admins if await client.get_entity(admin_id)])
             await event.respond(
                 f"Lista degli admin:\n{admin_list}\n\nInvia l'username dell'admin che vuoi rimuovere.",
-                buttons=[Button.inline("Home", b"home")]
+                buttons=[Button.inline("Home", b"home"), Button.inline("Rimuovi Admin", b"remove_admin")]
             )
-            user_states[event.sender_id] = 'waiting_for_admin_removal'
         else:
             await event.respond(
                 "Non ci sono admin al momento.",
@@ -165,6 +164,10 @@ async def callback_handler(event):
     elif data == "remove_channel":
         user_states[event.sender_id] = 'waiting_for_channel_removal'
         await event.respond("Invia l'ID del canale che desideri rimuovere.")
+
+    elif data == "remove_admin":
+        user_states[event.sender_id] = 'waiting_for_admin_removal'
+        await event.respond("Invia l'username dell'admin che vuoi rimuovere.")
 
     elif data == "set_times":
         user_states[event.sender_id] = 'waiting_for_times'
@@ -245,7 +248,6 @@ async def message_handler(event):
                     buttons=[Button.inline("Home", b"home")]
         )
             user_states.pop(event.sender_id)
-
 
         elif state == 'waiting_for_product_name':
             product_name = event.message.message.strip()
