@@ -76,21 +76,33 @@ async def callback_handler(event):
     elif data == "show_admins":
         if admins:
             admin_list = "\n".join([f"@{(await client.get_entity(admin_id)).username}" for admin_id in admins if await client.get_entity(admin_id)])
-            await event.respond(f"Lista degli admin:\n{admin_list}\n\nInvia l'username dell'admin che vuoi rimuovere.")
+            await event.respond(
+                f"Lista degli admin:\n{admin_list}\n\nInvia l'username dell'admin che vuoi rimuovere.",
+                buttons=[Button.inline("Home", b"home")]
+            )
             user_states[event.sender_id] = 'waiting_for_admin_removal'
         else:
-            await event.respond("Non ci sono admin al momento.")
+            await event.respond(
+                "Non ci sono admin al momento.",
+                buttons=[Button.inline("Home", b"home")]
+            )
 
     elif data.startswith("status:"):
         _, product_name, status = data.split(":")
         products[product_name] = status
-        await event.respond(f"Stato di {product_name} aggiornato a {status}.")
+        await event.respond(
+            f"Stato di {product_name} aggiornato a {status}.",
+            buttons=[Button.inline("Home", b"home")]
+        )
         for channel in channels:
             await client.send_message(channel, f"Il prodotto {product_name} è ora {status}.")
     
     elif data == "set_times":
         user_states[event.sender_id] = 'waiting_for_times'
         await event.respond("Invia due orari nel formato HH:MM (es. 10:00 18:00).")
+    
+    elif data == "home":
+        await start(event)
 
 @client.on(events.NewMessage)
 async def message_handler(event):
@@ -102,7 +114,10 @@ async def message_handler(event):
             try:
                 user = await client.get_entity(username)
                 admins.add(user.id)
-                await event.respond(f"Admin {username} aggiunto con successo.")
+                await event.respond(
+                    f"Admin {username} aggiunto con successo.",
+                    buttons=[Button.inline("Home", b"home")]
+                )
             except Exception as e:
                 await event.respond(f"Errore: {e}")
             finally:
@@ -115,19 +130,26 @@ async def message_handler(event):
                     buttons=[
                         Button.inline(ProductStatus.DISPONIBILE, f"status:{product_name}:{ProductStatus.DISPONIBILE}".encode('utf-8')),
                         Button.inline(ProductStatus.IN_ESURIMENTO, f"status:{product_name}:{ProductStatus.IN_ESURIMENTO}".encode('utf-8')),
-                        Button.inline(ProductStatus.ESAURITO, f"status:{product_name}:{ProductStatus.ESAURITO}".encode('utf-8'))
+                        Button.inline(ProductStatus.ESAURITO, f"status:{product_name}:{ProductStatus.ESAURITO}".encode('utf-8')),
+                        Button.inline("Home", b"home")
                     ]
                 )
             else:
                 products[product_name] = ProductStatus.DISPONIBILE
-                await event.respond(f"Prodotto {product_name} aggiunto con successo.")
+                await event.respond(
+                    f"Prodotto {product_name} aggiunto con successo.",
+                    buttons=[Button.inline("Home", b"home")]
+                )
             user_states.pop(event.sender_id)
         
         elif state == 'waiting_for_times':
             times = event.message.message.strip().split()
             if len(times) == 2:
                 scheduled_times.extend(times)
-                await event.respond(f"Orari impostati: {', '.join(scheduled_times)}.")
+                await event.respond(
+                    f"Orari impostati: {', '.join(scheduled_times)}.",
+                    buttons=[Button.inline("Home", b"home")]
+                )
             else:
                 await event.respond("Formato orario non valido. Invia due orari nel formato HH:MM.")
             user_states.pop(event.sender_id)
@@ -138,7 +160,10 @@ async def message_handler(event):
                 user = await client.get_entity(username)
                 if user.id in admins:
                     admins.remove(user.id)
-                    await event.respond(f"Admin {username} rimosso con successo.")
+                    await event.respond(
+                        f"Admin {username} rimosso con successo.",
+                        buttons=[Button.inline("Home", b"home")]
+                    )
                 else:
                     await event.respond("Questo utente non è un admin.")
             except Exception as e:
