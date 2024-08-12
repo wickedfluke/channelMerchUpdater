@@ -39,7 +39,7 @@ async def start(event):
             buttons=[
                 [Button.inline("Aggiungi Admin", b"add_admin"), Button.inline("Seleziona Canali", b"select_channels")],
                 [Button.inline("Aggiungi Prodotto", b"add_product"), Button.inline("Cambia Stato Prodotto", b"change_status")],
-                [Button.inline("Imposta Orari", b"set_times")]
+                [Button.inline("Imposta Orari", b"set_times"), Button.inline("Mostra Admin", b"show_admins")]
             ]
         )
     else:
@@ -72,6 +72,14 @@ async def callback_handler(event):
     elif data == "change_status":
         user_states[event.sender_id] = 'waiting_for_product_name'
         await event.respond("Seleziona il prodotto:")
+    
+    elif data == "show_admins":
+        if admins:
+            admin_list = "\n".join([f"@{(await client.get_entity(admin_id)).username}" for admin_id in admins if await client.get_entity(admin_id)])
+            await event.respond(f"Lista degli admin:\n{admin_list}\n\nInvia l'username dell'admin che vuoi rimuovere.")
+            user_states[event.sender_id] = 'waiting_for_admin_removal'
+        else:
+            await event.respond("Non ci sono admin al momento.")
 
     elif data.startswith("status:"):
         _, product_name, status = data.split(":")
@@ -101,7 +109,7 @@ async def message_handler(event):
                 user_states.pop(event.sender_id)
 
         elif state == 'waiting_for_product_name':
-            product_name = event.message.strip()
+            product_name = event.message.message.strip()
             if product_name in products:
                 await event.respond("Seleziona lo stato:",
                     buttons=[
@@ -116,13 +124,27 @@ async def message_handler(event):
             user_states.pop(event.sender_id)
         
         elif state == 'waiting_for_times':
-            times = event.message.strip().split()
+            times = event.message.message.strip().split()
             if len(times) == 2:
                 scheduled_times.extend(times)
                 await event.respond(f"Orari impostati: {', '.join(scheduled_times)}.")
             else:
                 await event.respond("Formato orario non valido. Invia due orari nel formato HH:MM.")
             user_states.pop(event.sender_id)
+        
+        elif state == 'waiting_for_admin_removal':
+            username = event.message.message.strip()
+            try:
+                user = await client.get_entity(username)
+                if user.id in admins:
+                    admins.remove(user.id)
+                    await event.respond(f"Admin {username} rimosso con successo.")
+                else:
+                    await event.respond("Questo utente non è un admin.")
+            except Exception as e:
+                await event.respond(f"Errore: {e}")
+            finally:
+                user_states.pop(event.sender_id)
 
 async def scheduled_message():
     while True:
