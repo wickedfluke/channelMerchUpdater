@@ -3,9 +3,9 @@ from telethon.tl.types import PeerChannel
 import asyncio
 import datetime
 
-api_id = '11978459'
-api_hash = '241490569641f4e8818b78526283fae7'
-bot_token = '7209764652:AAFd3RiIXul3AAQCvwsYKIMX69ctrbrXGZA'
+api_id = ''
+api_hash = ''
+bot_token = ''
 
 client = TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)
 
