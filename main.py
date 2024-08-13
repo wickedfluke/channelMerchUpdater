@@ -272,7 +272,7 @@ async def message_handler(event):
         elif state == 'waiting_for_times':
             times = event.message.message.strip().split()
             if len(times) == 2:
-                scheduled_times.extend(times)
+                scheduled_times[:] = times
                 await event.respond(
                     f"Orari impostati: {', '.join(scheduled_times)}.",
                     buttons=[Button.inline("Home", b"home")]
