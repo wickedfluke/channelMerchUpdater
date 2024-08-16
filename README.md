@@ -23,16 +23,13 @@ This Telegram bot helps admins manage product availability statuses and send aut
    ```
    git clone https://github.com/your-repo/telegram-product-bot.git
    cd telegram-product-bot
-   
 2. Install the required Python packages:
    ```
     pip install telethon
-
 3. Set up your API credentials:
    ```
         Open the Python file containing the bot code.
         Replace the api_id, api_hash, and bot_token variables with your own credentials.
-
 ## Usage
 
     Start the Bot: Run the bot by executing the script in Python:
