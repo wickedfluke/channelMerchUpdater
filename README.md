@@ -64,8 +64,8 @@ Bot Functions:
    Set Times: Schedule specific times for automated notifications (in HH
         format).
 
-   Automated Notifications: 
-   The bot will automatically send scheduled notifications about product availability to the selected channels at the specified times.
+Automated Notifications: 
+The bot will automatically send scheduled notifications about product availability to the selected channels at the specified times.
 
 ## Contributing
 
