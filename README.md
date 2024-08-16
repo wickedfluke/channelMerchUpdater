@@ -42,29 +42,30 @@ Set the First Admin:
 After starting the bot, you will be prompted to enter the Telegram ID of the first admin. This admin will have access to all bot features, including adding other admins.
 
 Admin Commands:
-        /start: Displays the admin dashboard with options to manage products, channels, and other admins.
-        Admin Functions:
-            Add Admin
-            Show Admins
-            Add Product
-            Change Product Status
-            Show Channels
-            Select Channels
-            Show Products
-            Set Times
+/start: Displays the admin dashboard with options to manage products, channels, and other admins.
+Admin Functions:
+- Add Admin
+- Show Admins
+- Add Product
+- Change Product Status
+- Show Channels
+- Select Channels
+- Show Products
+- Set Times
 
-   Bot Functions:
-        Add Admin: Enter the username of a user to add them as an admin.
-        Select Channels: Enter the username or link of the channel to send product availability updates.
-        Add Product: Enter the name of the product to add.
-        Change Product Status: Update the status of a selected product (Available, Low Stock, Out of Stock).
-        Show Admins: List all admins.
-        Show Products: Display all products with their current status.
-        Show Channels: List all selected channels.
-        Set Times: Schedule specific times for automated notifications (in HH
+Bot Functions:
+   Add Admin: Enter the username of a user to add them as an admin.
+   Select Channels: Enter the username or link of the channel to send product availability updates.
+   Add Product: Enter the name of the product to add.
+   Change Product Status: Update the status of a selected product (Available, Low Stock, Out of Stock).
+   Show Admins: List all admins.
+   Show Products: Display all products with their current status.
+   Show Channels: List all selected channels.
+   Set Times: Schedule specific times for automated notifications (in HH
         format).
 
-   Automated Notifications: The bot will automatically send scheduled notifications about product availability to the selected channels at the specified times.
+   Automated Notifications: 
+   The bot will automatically send scheduled notifications about product availability to the selected channels at the specified times.
 
 ## Contributing
 
