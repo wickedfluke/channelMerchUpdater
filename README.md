@@ -20,25 +20,23 @@ This Telegram bot helps admins manage product availability statuses and send aut
 
 1. Clone the repository:
 
-   ```bash
+   ```
    git clone https://github.com/your-repo/telegram-product-bot.git
    cd telegram-product-bot
-Install the required Python packages:
-
-bash
-
+   
+2. Install the required Python packages:
+   ```
     pip install telethon
 
-    Set up your API credentials:
+3. Set up your API credentials:
+   ```
         Open the Python file containing the bot code.
         Replace the api_id, api_hash, and bot_token variables with your own credentials.
 
-Usage
+## Usage
 
     Start the Bot: Run the bot by executing the script in Python:
-
-    bash
-
+    
     python bot.py
 
     Set the First Admin: After starting the bot, you will be prompted to enter the Telegram ID of the first admin. This admin will have access to all bot features, including adding other admins.
@@ -68,14 +66,8 @@ Usage
 
     Automated Notifications: The bot will automatically send scheduled notifications about product availability to the selected channels at the specified times.
 
-Contributing
+## Contributing
 
 Feel free to contribute to this project by submitting issues or pull requests. If you encounter any bugs or have suggestions for improvements, please open an issue.
-License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
-
-css
-
 
 This `README.md` provides a clear overview of the bot's functionality, installation steps, and usage instructions. Feel free to customize it as needed!
