@@ -27,7 +27,6 @@ This Telegram bot helps admins manage product availability statuses and send aut
    ```
     pip install telethon
 3. Set up your API credentials:
-   ```
         Open the Python file containing the bot code.
         Replace the api_id, api_hash, and bot_token variables with your own credentials.
 ## Usage
