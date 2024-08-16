@@ -27,17 +27,17 @@ This Telegram bot helps admins manage product availability statuses and send aut
    ```
     pip install telethon
 3. Set up your API credentials:
-        Open the Python file containing the bot code.
-        Replace the api_id, api_hash, and bot_token variables with your own credentials.
+   
+   Open the Python file containing the bot code.
+   Replace the api_id, api_hash, and bot_token variables with your own credentials.
 ## Usage
-
-    Start the Bot: Run the bot by executing the script in Python:
+Start the Bot: Run the bot by executing the script in Python:
     
     python bot.py
 
-    Set the First Admin: After starting the bot, you will be prompted to enter the Telegram ID of the first admin. This admin will have access to all bot features, including adding other admins.
+Set the First Admin: After starting the bot, you will be prompted to enter the Telegram ID of the first admin. This admin will have access to all bot features, including adding other admins.
 
-    Admin Commands:
+Admin Commands:
         /start: Displays the admin dashboard with options to manage products, channels, and other admins.
         Admin Functions:
             Add Admin
@@ -49,7 +49,7 @@ This Telegram bot helps admins manage product availability statuses and send aut
             Show Products
             Set Times
 
-    Bot Functions:
+   Bot Functions:
         Add Admin: Enter the username of a user to add them as an admin.
         Select Channels: Enter the username or link of the channel to send product availability updates.
         Add Product: Enter the name of the product to add.
@@ -60,7 +60,7 @@ This Telegram bot helps admins manage product availability statuses and send aut
         Set Times: Schedule specific times for automated notifications (in HH
         format).
 
-    Automated Notifications: The bot will automatically send scheduled notifications about product availability to the selected channels at the specified times.
+   Automated Notifications: The bot will automatically send scheduled notifications about product availability to the selected channels at the specified times.
 
 ## Contributing
 
