@@ -31,11 +31,15 @@ This Telegram bot helps admins manage product availability statuses and send aut
    Open the Python file containing the bot code.
    Replace the api_id, api_hash, and bot_token variables with your own credentials.
 ## Usage
-Start the Bot: Run the bot by executing the script in Python:
+Start the Bot: 
+
+Run the bot by executing the script in Python:
     
     python bot.py
 
-Set the First Admin: After starting the bot, you will be prompted to enter the Telegram ID of the first admin. This admin will have access to all bot features, including adding other admins.
+Set the First Admin: 
+
+After starting the bot, you will be prompted to enter the Telegram ID of the first admin. This admin will have access to all bot features, including adding other admins.
 
 Admin Commands:
         /start: Displays the admin dashboard with options to manage products, channels, and other admins.
